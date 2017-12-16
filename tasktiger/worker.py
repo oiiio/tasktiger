@@ -670,12 +670,14 @@ class Worker(object):
                         task.serialized_func,
                         None,
                         {key: kwargs.get(key) for key in task.lock_key},
+                        cls=self.tiger.config.get('SERIALIZER')
                     )
                 else:
                     lock_id = gen_unique_id(
                         task.serialized_func,
                         task.args,
                         task.kwargs,
+                        cls=self.tiger.config.get('SERIALIZER')
                     )
 
                 if lock_id not in lock_ids:

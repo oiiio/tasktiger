@@ -56,7 +56,7 @@ class Task(object):
             retry_method = getattr(func, '_task_retry_method', None)
 
         if unique:
-            task_id = gen_unique_id(serialized_name, args, kwargs)
+            task_id = gen_unique_id(serialized_name, args, kwargs, cls=tiger.config.get('SERIALIZER'))
         else:
             task_id = gen_id()
 
