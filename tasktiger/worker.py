@@ -2,6 +2,7 @@ from collections import OrderedDict
 import errno
 import fcntl
 import os
+import json
 import random
 import select
 import signal
@@ -43,6 +44,8 @@ class Worker(object):
         self._did_work = True
         self._last_task_check = 0
         self.stats_thread = None
+        self.json_encoder = tiger.config.get('JSON_ENCODER')
+        self.json_decoder = tiger.config.get('JSON_DECODER')
 
         if queues:
             self.only_queues = set(queues)
@@ -326,7 +329,7 @@ class Worker(object):
                     ''.join(traceback.format_exception(*exc_info))
             execution['success'] = success
             execution['host'] = socket.gethostname()
-            serialized_execution = self.tiger._serialize(execution)
+            serialized_execution = json.dumps(execution, cls=self.json_encoder)
             for task in tasks:
                 self.connection.rpush(self._key('task', task.id, 'executions'),
                                       serialized_execution)
@@ -543,7 +546,7 @@ class Worker(object):
         tasks = []
         for task_id, serialized_task in zip(task_ids, serialized_tasks):
             if serialized_task:
-                task_data = self.tiger._deserialize(serialized_task)
+                task_data = json.loads(serialized_task, cls=self.json_decoder)
             else:
                 # In the rare case where we don't find the task which is
                 # queued (see ReliabilityTestCase.test_task_disappears),
@@ -670,14 +673,14 @@ class Worker(object):
                         task.serialized_func,
                         None,
                         {key: kwargs.get(key) for key in task.lock_key},
-                        cls=self.tiger.config.get('SERIALIZER')
+                        cls=self.json_encoder
                     )
                 else:
                     lock_id = gen_unique_id(
                         task.serialized_func,
                         task.args,
                         task.kwargs,
-                        cls=self.tiger.config.get('SERIALIZER')
+                        cls=self.json_encoder
                     )
 
                 if lock_id not in lock_ids:
@@ -740,7 +743,7 @@ class Worker(object):
                 self._key('task', task.id, 'executions'), -1)
 
             if execution:
-                execution = self.tiger._deserialize(execution)
+                execution = json.loads(execution, cls=self.json_decoder)
 
             if execution and execution.get('retry'):
                 if 'retry_method' in execution:

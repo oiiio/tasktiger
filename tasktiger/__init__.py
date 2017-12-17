@@ -162,9 +162,9 @@ class TaskTiger(object):
 
             # Serializer / Deserilaizer to use for serializing/deserializing tasks
 
-            'SERIALIZER': json.dumps,
+            'JSON_ENCODER': JSONEncoder,
 
-            'DESERIALIZER': json.loads
+            'JSON_DECODER': JSONDecoder 
 
         }
         if config:
@@ -199,9 +199,6 @@ class TaskTiger(object):
 
         # List of task functions that are executed periodically.
         self.periodic_task_funcs = {}
-
-        self._serialize = self.config['SERIALIZER']
-        self._deserialize = self.config['DESERIALIZER']
 
     def _get_current_task(self):
         if g['current_tasks'] is None:
