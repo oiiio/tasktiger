@@ -281,7 +281,7 @@ class Task(object):
 
         # When using ALWAYS_EAGER, make sure we have serialized the task to
         # ensure there are no serialization errors.
-        serialized_task = self.tiger._serialize(self._data)
+        serialized_task = json.dumps(self._data, cls=self.json_encoder)
 
         if tiger.config['ALWAYS_EAGER'] and state == QUEUED:
             return self.execute()
