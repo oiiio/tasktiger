@@ -1,3 +1,5 @@
+from json import JSONEncoder, JSONDecoder
+
 import click
 from collections import defaultdict
 import importlib
