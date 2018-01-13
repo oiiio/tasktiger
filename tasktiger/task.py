@@ -384,19 +384,17 @@ class Task(object):
                 results = pipeline.execute()
 
                 for serialized_data, serialized_executions, ts in zip(results[0], results[1:], tss):
+                    if serialized_data is None:
+                        continue
                     data = json.loads(serialized_data, cls=json_decoder)
                     executions = [json.loads(e, cls=json_decoder) for e in serialized_executions if e]
-
-                    task = Task(tiger, queue=queue, _data=data, _state=state,
-                                _ts=ts, _executions=executions)
-
+                    task = Task(tiger, queue=queue, _data=data, _state=state, _ts=ts, _executions=executions)
                     tasks.append(task)
             else:
                 data = tiger.connection.mget([tiger._key('task', item[0]) for item in items])
                 for serialized_data, ts in zip(data, tss):
-                    data = json.loads(serialized_data, cls=json_decoder)
-                    task = Task(tiger, queue=queue, _data=data, _state=state,
-                                _ts=ts)
+                    data = json.loads(serialized_data, cls=json_decoder) if serialized_data is not None else ""
+                    task = Task(tiger, queue=queue, _data=data, _state=state, _ts=ts)
                     tasks.append(task)
 
         return n, tasks
